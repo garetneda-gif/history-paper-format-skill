@@ -1,0 +1,1 @@
+/Users/jikunren/.claude/skills/history-paper-writer/.sisyphus/evidence/min-paper-unpacked/word/settings.xml:<w:footnotePr><w:numRestart w:val="eachPage" /><w:numFmt w:val="decimalEnclosedCircle" /></w:footnotePr></w:settings>

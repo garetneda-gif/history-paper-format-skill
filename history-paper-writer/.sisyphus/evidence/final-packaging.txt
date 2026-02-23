@@ -1,0 +1,51 @@
+📦 Packaging skill: /Users/jikunren/.claude/skills/history-paper-writer
+
+🔍 Validating skill...
+✅ Skill is valid!
+
+  Added: history-paper-writer/SKILL.md
+  Added: history-paper-writer/references/citation-standard-history-research.md
+  Added: history-paper-writer/references/layout-standard-history-research.md
+  Added: history-paper-writer/references/anti-fabrication-audit.md
+  Added: history-paper-writer/.sisyphus/evidence/min-paper-final-verify.docx
+  Added: history-paper-writer/.sisyphus/evidence/final-packaging.txt
+  Added: history-paper-writer/.sisyphus/evidence/min-paper.docx
+  Added: history-paper-writer/.sisyphus/evidence/min-paper-final.docx
+  Added: history-paper-writer/.sisyphus/evidence/task-6-repack-verification.txt
+  Added: history-paper-writer/.sisyphus/evidence/task-6-footnote-postprocess.txt
+  Added: history-paper-writer/.sisyphus/evidence/min-paper-unpacked/[Content_Types].xml
+  Added: history-paper-writer/.sisyphus/evidence/min-paper-unpacked/docProps/app.xml
+  Added: history-paper-writer/.sisyphus/evidence/min-paper-unpacked/docProps/custom.xml
+  Added: history-paper-writer/.sisyphus/evidence/min-paper-unpacked/docProps/core.xml
+  Added: history-paper-writer/.sisyphus/evidence/min-paper-unpacked/_rels/.rels
+  Added: history-paper-writer/.sisyphus/evidence/min-paper-unpacked/word/document.xml
+  Added: history-paper-writer/.sisyphus/evidence/min-paper-unpacked/word/settings.xml
+  Added: history-paper-writer/.sisyphus/evidence/min-paper-unpacked/word/numbering.xml
+  Added: history-paper-writer/.sisyphus/evidence/min-paper-unpacked/word/footer1.xml
+  Added: history-paper-writer/.sisyphus/evidence/min-paper-unpacked/word/styles.xml
+  Added: history-paper-writer/.sisyphus/evidence/min-paper-unpacked/word/footnotes.xml
+  Added: history-paper-writer/.sisyphus/evidence/min-paper-unpacked/word/_rels/document.xml.rels
+  Added: history-paper-writer/.sisyphus/evidence/min-paper-unpacked/word/_rels/footnotes.xml.rels
+  Added: history-paper-writer/.sisyphus/evidence/min-paper-unpacked/word/_rels/footer1.xml.rels
+  Added: history-paper-writer/.sisyphus/evidence/min-paper-verify-unpacked/[Content_Types].xml
+  Added: history-paper-writer/.sisyphus/evidence/min-paper-verify-unpacked/docProps/app.xml
+  Added: history-paper-writer/.sisyphus/evidence/min-paper-verify-unpacked/docProps/custom.xml
+  Added: history-paper-writer/.sisyphus/evidence/min-paper-verify-unpacked/docProps/core.xml
+  Added: history-paper-writer/.sisyphus/evidence/min-paper-verify-unpacked/_rels/.rels
+  Added: history-paper-writer/.sisyphus/evidence/min-paper-verify-unpacked/word/document.xml
+  Added: history-paper-writer/.sisyphus/evidence/min-paper-verify-unpacked/word/settings.xml
+  Added: history-paper-writer/.sisyphus/evidence/min-paper-verify-unpacked/word/numbering.xml
+  Added: history-paper-writer/.sisyphus/evidence/min-paper-verify-unpacked/word/footer1.xml
+  Added: history-paper-writer/.sisyphus/evidence/min-paper-verify-unpacked/word/styles.xml
+  Added: history-paper-writer/.sisyphus/evidence/min-paper-verify-unpacked/word/footnotes.xml
+  Added: history-paper-writer/.sisyphus/evidence/min-paper-verify-unpacked/word/_rels/document.xml.rels
+  Added: history-paper-writer/.sisyphus/evidence/min-paper-verify-unpacked/word/_rels/footnotes.xml.rels
+  Added: history-paper-writer/.sisyphus/evidence/min-paper-verify-unpacked/word/_rels/footer1.xml.rels
+  Added: history-paper-writer/scripts/supplement_flow.py
+  Added: history-paper-writer/scripts/prepare_sources.py
+  Added: history-paper-writer/scripts/citation_audit.py
+  Added: history-paper-writer/scripts/generate_docx.cjs
+  Added: history-paper-writer/scripts/pack_simple.py
+  Added: history-paper-writer/scripts/postprocess_footnotes.py
+
+✅ Successfully packaged skill to: /Users/jikunren/Library/Mobile Documents/com~apple~CloudDocs/SyncConfig/claude/folder_data/skills/history-paper-writer.skill

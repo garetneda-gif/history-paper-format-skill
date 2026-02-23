@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<w:settings xmlns:ns1="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" ns1:Ignorable="w14 w15 wp14">
+  <w:compat>
+    <w:compatSetting w:val="15" w:uri="http://schemas.microsoft.com/office/word" w:name="compatibilityMode" />
+  </w:compat>
+  <w:displayBackgroundShape />
+<w:footnotePr><w:numRestart w:val="eachPage" /><w:numFmt w:val="decimalEnclosedCircle" /></w:footnotePr></w:settings>
