@@ -1,168 +1,161 @@
 ---
 name: 历史研究格式排版
-description: 将学术论文按历史研究格式规范排版为 HTML，支持单栏连续（在线预览）和双栏分页（PDF 友好）两种输出。触发词：历史排版、历史研究格式
+description: 将 Word 文档（.docx）按《历史研究》期刊排版规范重新排版，输出符合规格的 .docx 文件。触发词：历史排版、历史研究格式
 ---
 
 # 历史研究格式排版
 
-本 Skill 用于将学术论文转换为符合《历史研究》等历史学核心期刊规范的 HTML 格式。支持两种主要输出模式：适合在线阅读的单栏连续页面，以及适合打印和导出 PDF 的双栏分页排版。
+本 Skill 将用户提供的 Word 文档（.docx）按《历史研究》核心期刊规范重新排版，输出 .docx 文件。
 
 ## 触发条件
-当用户提及以下关键词时触发：
+
+用户提及以下关键词时触发：
 - 历史排版
 - 历史研究格式
 - 历史学期刊排版
 
 ## 使用方式
 
-### 输入格式
-- Markdown 文件（.md）
-- 或直接粘贴文本（代理将创建临时 .md 文件后调用渲染脚本）
+### 输入
 
-### 渲染命令
+- Word 文档（.docx）
+
+### 排版命令
 
 ```bash
-# 单栏连续（在线预览）
-python3 /Users/jikunren/.config/opencode/skills/历史研究格式排版/scripts/render.py \
-  --mode single \
-  --input 论文.md \
-  --output 单栏连续-论文.html
-
-# 双栏分页（PDF 打印）
-python3 /Users/jikunren/.config/opencode/skills/历史研究格式排版/scripts/render.py \
-  --mode two-column \
-  --input 论文.md \
-  --output 双栏分页-论文.html
+python3 /Users/jikunren/.config/opencode/skills/历史研究格式排版/scripts/format_docx.py \
+  --input 论文.docx \
+  --output 排版后.docx
 ```
 
-### 工作流程
-1. 用户提供论文内容（Word/Markdown/粘贴文本）
-2. 代理将内容整理为 Markdown 格式
-3. 调用 render.py 选择输出模式
-4. 验证输出 HTML 的字体、边距、行距规格
-5. 交付两种格式的 HTML 文件
+默认会在输入文件同目录生成 `.bak.docx` 备份。若不需要备份：
 
-### 排版规格速查
-| 元素 | 字体 | 字号 | 行距 |
-|------|------|------|------|
-| 正文 | 宋体 + Times New Roman | 小4(12pt) | 17.9pt |
-| 大标题 | 宋体 | 1号(26pt) | — |
-| 副标题 | 仿宋 | 小2(18pt) | — |
-| 二级标题 | 宋体 | 3号(16pt) | — |
-| 摘要/关键词标签 | 黑体 | 小4(12pt) | — |
-| 摘要/关键词内容 | 仿宋 | 小4(12pt) | — |
-| 独立引文 | 楷体 | 小4(12pt) | — |
-| 脚注 | 楷体 | 5号(10.5pt) | 14.5pt |
+```bash
+python3 /Users/jikunren/.config/opencode/skills/历史研究格式排版/scripts/format_docx.py \
+  --input 论文.docx \
+  --output 排版后.docx \
+  --no-backup
+```
 
-### 模式选择说明
+### 校验命令
 
-**单栏连续模式（single）**：
-- 适用场景：在线阅读、网页发布
-- 特点：连续滚动，无分页符
-- 页面模拟：A4 纸边距视觉效果（通过 padding 实现）
-- 输出：单一 HTML 文件，背景灰色（模拟纸张效果）
+```bash
+python3 /Users/jikunren/.config/opencode/skills/历史研究格式排版/scripts/validate_docx.py 排版后.docx
+```
 
-**双栏分页模式（two-column）**：
-- 适用场景：打印输出、PDF 导出
-- 特点：每页独立容器，双栏布局，页眉页脚
-- 页面控制：使用 `@page` CSS 规则和 `page-break-after`
-- 输出：多页结构，每页背景白色，页间间隔 10mm
+期望输出：全部 PASS，退出码 0。
 
-### 输入 Markdown 样例
-参见 `references/sample.md`，包含：
-- 主标题（`# 标题`）
-- 副标题（`## 副标题`）
-- 作者/单位（`**作者：**` / `**单位：**`）
-- 摘要/关键词（`**摘要：**` / `**关键词：**`）
-- 章节标题（`## 一、` / `## 二、`）
-- 正文段落（自动缩进 2em）
-- 独立引文（`> 引文内容`）
-- 脚注（`[^1]` 引用和 `[^1]:` 定义）
+### 完整工作流程
 
-### 错误处理
-- **无效模式**：退出码 1，输出 "supported modes: single, two-column"
-- **文件不存在**：退出码 1，输出 "ERROR: 输入文件不存在"
-- **模板缺失**：退出码 1，输出 "ERROR: 模板文件不存在"
+1. 用户提供 .docx 文件路径
+2. 调用 `format_docx.py` 执行排版
+3. 调用 `validate_docx.py` 进行机器校验（exit 0 表示通过）
+4. 将排版后 .docx 交付用户
 
 ---
 
-## 验证命令清单
+## 排版规格速查
 
-排版完成后，运行以下命令进行机器验证（均应返回退出码 0）：
+| 元素 | 东亚字体 | 拉丁字体 | 字号 | 行距 | 缩进 |
+|------|---------|---------|------|------|------|
+| 正文 | 宋体 | Times New Roman | 小4（12pt） | 17.9pt | 首行2字符 |
+| 大标题 | 宋体 | Times New Roman | 1号（26pt） | — | 居中 |
+| 副标题 | 仿宋 | Times New Roman | 小2（18pt） | — | 居中 |
+| 二级标题 | 宋体 | Times New Roman | 3号（16pt） | — | — |
+| 摘要/关键词标签 | 黑体 | Times New Roman | 小4（12pt） | 17.9pt | 左缩进1字符 |
+| 摘要/关键词内容 | 仿宋 | Times New Roman | 小4（12pt） | 17.9pt | 左右各1字符 |
+| 独立引文 | 楷体 | Times New Roman | 小4（12pt） | 17.9pt | 左右各2字符 |
+| 脚注 | 楷体 | Times New Roman | 5号（10.5pt） | 14.5pt | 左右各1字符 |
 
-```bash
-VALIDATOR="/Users/jikunren/.config/opencode/skills/历史研究格式排版/scripts/validate_layout.py"
+### 页边距
 
-# 校验单栏模板（18/18 规则）
-python3 "$VALIDATOR" \
-  "/Users/jikunren/.config/opencode/skills/历史研究格式排版/assets/template-single-column.html"
-
-# 校验双栏模板（18/18 规则）
-python3 "$VALIDATOR" \
-  "/Users/jikunren/.config/opencode/skills/历史研究格式排版/assets/template-two-column.html"
-
-# 校验用户生成的输出文件
-python3 "$VALIDATOR" 输出文件.html
-```
-
-校验规则 18 条分布：
-- **边距**（4条）：上 3.3cm / 下 2.7cm / 左 2.4cm / 右 2.3cm
-- **字号**（5条）：正文 12pt / 大标题 26pt / 二级标题 16pt / 脚注 10.5pt / 摘要 12pt
-- **行距**（2条）：正文 17.9pt / 脚注 14.5pt
-- **字体**（2条）：Times New Roman + @font-face / SimSun/STSong
-- **PAS 斜体**（4条）：ibid./et al. 斜体 / 文章标题不误用斜体 / NEEDS_REVIEW 标记检测 / 船名规则注册
-- **版芯**（1条）：36 字宽（16cm）
+| 上 | 下 | 左 | 右 |
+|----|----|----|-----|
+| 3.3cm | 2.7cm | 2.4cm | 2.3cm |
 
 ---
 
-## 脚注每页编号兼容性说明
+## 命名样式（8个，前缀 HR-）
 
-### 当前实现
-- 使用 CSS `counter-reset: footnote` 在每个 `.page` 容器上，**每页脚注序号从 1 重新开始**
-- 纯 CSS 方案，无需 JavaScript，任意浏览器均可预览
+| 样式名 | 对应元素 |
+|--------|---------|
+| `HR-Body` | 普通正文 |
+| `HR-QuoteBlock` | 独立引文块 |
+| `HR-FootnoteText` | 脚注正文 |
+| `HR-TitleMain` | 文章大标题 |
+| `HR-Subtitle` | 副标题 |
+| `HR-AbstractLabel` | 摘要/关键词标签 |
+| `HR-AbstractText` | 摘要/关键词内容 |
+| `HR-SectionL2` | 二级标题 |
 
-### 已知限制
-- **浏览器打印分页**：若依赖浏览器原生 `Ctrl+P` 打印，脚注序号可能不与视觉分页对齐（因浏览器自动分页逻辑与 `.page` div 无关）
-- **推荐打印方案**：每页使用独立 `.page` div，确保视觉分页与逻辑分页一致；打印时浏览器应识别 `page-break-after: always`
+---
 
-### Paged.js 升级路径
-模板内已保留 Paged.js 注释（`<!-- footnote reset fallback -->`），若需要精确分页，可参考：
-```html
-<!-- 解注以启用 Paged.js 精确分页（需联网） -->
-<!-- <script src="https://unpkg.com/pagedjs/dist/paged.polyfill.js"></script> -->
+## 段落自动分类规则
+
+`format_docx.py` 根据以下优先级分类段落：
+
+1. **已有 HR- 样式** → 保留不变
+2. **Word 内置标题样式** → 映射到对应 HR- 样式
+   - `Heading 1` / `Title` → `HR-TitleMain`
+   - `Heading 2` / `Subtitle` → `HR-Subtitle`
+   - `Heading 3/4` → `HR-SectionL2`
+   - `Quote` / `Block` → `HR-QuoteBlock`
+   - `Footnote` → `HR-FootnoteText`
+3. **文本特征匹配**（正则）
+   - `摘要：` / `关键词：` 开头 → `HR-AbstractLabel`
+   - `一、` / `（一）` 等 → `HR-SectionL2`
+4. **默认** → `HR-Body`
+
+---
+
+## 脚注每页重排
+
+通过 OOXML 直改 `word/settings.xml` 注入：
+
+```xml
+<w:footnotePr>
+  <w:numRestart w:val="eachPage"/>
+</w:footnotePr>
 ```
 
 ---
 
-## 完整运行示例
+## PAS 斜体规则
 
-### 示例 A：单栏连续（在线预览）
+低置信度斜体（无法确认是否符合 PAS 规范）的 run 将被标记 `NEEDS_REVIEW: italic`，禁止自动改写。校验器会统计未标注的斜体 run 并以 WARN 形式输出，不导致 exit 1。
 
-```bash
-python3 /Users/jikunren/.config/opencode/skills/历史研究格式排版/scripts/render.py \
-  --mode single \
-  --input /Users/jikunren/.config/opencode/skills/历史研究格式排版/references/sample.md \
-  --output /tmp/preview-single.html
+---
 
-# 校验输出
-python3 /Users/jikunren/.config/opencode/skills/历史研究格式排版/scripts/validate_layout.py \
-  /tmp/preview-single.html
-# 期望：退出码 0，18/18 PASS
-```
+## 校验规则（共 25 条）
 
-### 示例 B：双栏分页（PDF 打印）
+| 类别 | 条数 | 示例 |
+|------|------|------|
+| 边距 | 4 | margin_top ≈ 1188000 twips |
+| 样式存在性 | 8 | HR-Body 等 8 个 HR- 样式存在 |
+| 字号 | 5 | HR-Body=12pt, HR-TitleMain=26pt |
+| 行距 | 2 | HR-Body=17.9pt, HR-FootnoteText=14.5pt |
+| 字体 | 4 | latin=TNR, eastAsia=宋体/楷体 |
+| 脚注结构 | 1 | numRestart=eachPage |
+| PAS 斜体 | 1 | WARN 未标注斜体 run |
 
-```bash
-python3 /Users/jikunren/.config/opencode/skills/历史研究格式排版/scripts/render.py \
-  --mode two-column \
-  --input /Users/jikunren/.config/opencode/skills/历史研究格式排版/references/sample.md \
-  --output /tmp/preview-two-column.html
+---
 
-# 校验输出
-python3 /Users/jikunren/.config/opencode/skills/历史研究格式排版/scripts/validate_layout.py \
-  /tmp/preview-two-column.html
-# 期望：退出码 0，18/18 PASS
-```
+## 错误处理
+
+| 错误 | 退出码 | 说明 |
+|------|--------|------|
+| 输入文件不存在 | 1 | 输出到 stderr |
+| 输入非 .docx | 1 | 输出到 stderr |
+| 校验存在 FAIL | 1 | 输出失败条目 |
+| 全部 PASS | 0 | — |
+
+---
+
+## 不实现的功能
+
+- 文献 DOI/PubMed/Crossref 自动补链
+- 大体积字体文件内嵌
+- 人工目测验收
 
 ---
 
@@ -170,16 +163,19 @@ python3 /Users/jikunren/.config/opencode/skills/历史研究格式排版/scripts
 
 ```
 历史研究格式排版/
-├── SKILL.md                              本文件（Skill 使用说明）
-├── assets/
-│   ├── template-single-column.html       单栏连续模板
-│   └── template-two-column.html          双栏分页模板
+├── SKILL.md
 ├── references/
-│   ├── style-mapping.md                  排版规格映射表
-│   ├── italic-rules-pas.md               PAS 斜体规则（斜体/正体适用范围）
-│   ├── footnote-strategy.md              脚注每页编号技术方案
-│   └── sample.md                         最小样本（测试用）
+│   ├── style-mapping.md          排版规格映射表（docx 版）
+│   ├── italic-rules-pas.md       PAS 斜体规则
+│   └── footnote-strategy.md      脚注 OOXML 方案
 └── scripts/
-    ├── render.py                          渲染入口（--mode single/two-column）
-    └── validate_layout.py                 自动化校验脚本（18 条规则，机器可执行）
+    ├── format_docx.py            排版主入口
+    ├── validate_docx.py          机器校验（25 条规则）
+    └── lib/
+        ├── specs.py              规格常量
+        ├── io_utils.py           文件 I/O
+        ├── style_factory.py      命名样式注册
+        ├── font_utils.py         中西文字体分离
+        ├── paragraph_rules.py    段落分类 + 样式应用
+        └── footnote_ooxml.py     脚注 OOXML 操作
 ```
