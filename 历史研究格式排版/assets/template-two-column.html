@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }}</title>
+    <style>
+        /* =========================================================================
+           全局样式变量 (Global Style Variables)
+           ========================================================================= */
+        :root {
+            --paper-width: 210mm;
+            --paper-height: 297mm;
+            --page-margin-top: 3.3cm;
+            --page-margin-bottom: 2.7cm;
+            --page-margin-left: 2.4cm;
+            --page-margin-right: 2.3cm;
+            --column-gap: 6mm;
+            --base-font-size: 12pt;
+            --base-line-height: 17.9pt;
+        }
+
+        /* 字体定义 (Font Definitions) */
+        @font-face {
+            font-family: 'LatinTNR';
+            src: local('Times New Roman'), local('TimesNewRoman');
+            unicode-range: U+0020-007E, U+00A0-00FF;
+        }
+
+        /* 基础重置 (Base Reset) */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: #f0f0f0; /* 仅供预览时区分页面背景，打印时不可见 */
+            font-family: 'LatinTNR', "SimSun", "STSong", "Noto Serif CJK SC", serif;
+            font-size: var(--base-font-size);
+            line-height: var(--base-line-height);
+            color: #000;
+        }
+
+        /* =========================================================================
+           页面容器 (Page Container)
+           ========================================================================= */
+        @page {
+            size: A4;
+            margin: var(--page-margin-top) var(--page-margin-right) var(--page-margin-bottom) var(--page-margin-left);
+        }
+
+        .page {
+            width: var(--paper-width);
+            min-height: var(--paper-height);
+            margin: 0 auto 10mm auto;
+            background-color: white;
+            padding: var(--page-margin-top) var(--page-margin-right) var(--page-margin-bottom) var(--page-margin-left);
+            position: relative;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            page-break-after: always;
+            /* 内部使用 flex 布局方便管理页眉页脚和正文内容区 */
+            display: flex;
+            flex-direction: column;
+        }
+
+        @media print {
+            body {
+                background-color: transparent;
+            }
+            .page {
+                margin: 0;
+                padding: 0; /* 打印时由 @page 控制边距 */
+                box-shadow: none;
+                page-break-after: always;
+                width: auto;
+                min-height: auto;
+            }
+        }
+
+        .page-header {
+            font-family: 'LatinTNR', "SimSun", "STSong", "Noto Serif CJK SC", serif;
+            font-size: 10.5pt;
+            text-align: center;
+            border-bottom: 0.5pt solid #000;
+            padding-bottom: 2mm;
+            margin-bottom: 5mm;
+        }
+
+        .page-content {
+            flex-grow: 1;
+            position: relative;
+        }
+
+        .page-footer {
+            font-family: 'LatinTNR', "SimSun", "STSong", "Noto Serif CJK SC", serif;
+            font-size: 10.5pt;
+            text-align: center;
+            margin-top: auto;
+            padding-top: 5mm;
+        }
+
+        /* =========================================================================
+           双栏布局 (Two-Column Layout)
+           ========================================================================= */
+        .two-column {
+            column-count: 2;
+            column-gap: var(--column-gap);
+            text-align: justify;
+            /* column-fill: auto;  按需开启 */
+        }
+
+        /* 跨栏元素 (Spanning Elements) */
+        .full-width {
+            column-span: all;
+        }
+
+        /* =========================================================================
+           排版元素 (Typography Elements)
+           ========================================================================= */
+        /* 段落 */
+        p {
+            text-indent: 2em;
+            margin-bottom: 0;
+            text-align: justify;
+        }
+
+        .first-paragraph {
+            text-indent: 0;
+        }
+
+        /* 标题层次 */
+        h1.paper-title {
+            font-family: 'LatinTNR', "SimSun", "STSong", "Noto Serif CJK SC", serif;
+            font-size: 26pt;
+            text-align: center;
+            font-weight: bold;
+            margin-bottom: 8mm;
+            column-span: all;
+        }
+
+        h2.author-info {
+            font-family: 'LatinTNR', "KaiTi", "STKaiti", serif;
+            font-size: 12pt;
+            text-align: center;
+            margin-bottom: 8mm;
+            column-span: all;
+        }
+
+        h3.section-title {
+            font-family: 'LatinTNR', "SimSun", "STSong", "Noto Serif CJK SC", serif;
+            font-size: 16pt;
+            font-weight: bold;
+            text-indent: 0;
+            margin-top: 1em;
+            margin-bottom: 0.5em;
+            text-align: center; /* 历史研究格式通常居中 */
+        }
+
+        h4.subsection-title {
+            font-family: 'LatinTNR', "SimSun", "STSong", "Noto Serif CJK SC", serif;
+            font-size: 14pt;
+            font-weight: bold;
+            text-indent: 2em; /* 历史研究格式部分小标题带缩进 */
+            margin-top: 0.5em;
+            margin-bottom: 0.5em;
+        }
+
+        /* 摘要和关键词 */
+        .abstract-section {
+            margin-bottom: 8mm;
+            column-span: all;
+        }
+
+        .abstract-block, .keywords-block {
+            margin-bottom: 0.5em;
+            text-align: justify;
+        }
+
+        .abstract-label, .keywords-label {
+            font-family: 'LatinTNR', "SimHei", "STHeiti", "Microsoft YaHei", sans-serif;
+            font-size: 12pt;
+            font-weight: bold;
+        }
+
+        .abstract-content, .keywords-content {
+            font-family: 'LatinTNR', "FangSong", "STFangsong", serif;
+            font-size: 12pt;
+            padding-left: 1em;
+            padding-right: 1em;
+        }
+
+        /* 独立引文 */
+        blockquote {
+            font-family: 'LatinTNR', "KaiTi", "STKaiti", serif;
+            font-size: 12pt;
+            padding-left: 2em;
+            padding-right: 2em;
+            text-indent: 0;
+            margin-top: 0.5em;
+            margin-bottom: 0.5em;
+        }
+
+        /* =========================================================================
+           表格与图版 (Tables & Figures)
+           ========================================================================= */
+        .table-wrapper {
+            margin: 1em 0;
+            width: 100%;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: 'LatinTNR', "SimSun", "STSong", "Noto Serif CJK SC", serif;
+            font-size: 10.5pt;
+            text-align: center;
+        }
+
+        th, td {
+            border: 1px solid #000;
+            padding: 2mm;
+        }
+
+        .table-caption, .figure-caption {
+            font-family: 'LatinTNR', "KaiTi", "STKaiti", serif;
+            font-size: 10.5pt;
+            text-align: center;
+            margin-bottom: 0.5em;
+        }
+
+        /* 三线表覆盖样式 */
+        table.three-line {
+            border-top: 1.5pt solid #000;
+            border-bottom: 1.5pt solid #000;
+        }
+        table.three-line th, table.three-line td {
+            border: none;
+        }
+        table.three-line thead {
+            border-bottom: 0.75pt solid #000;
+        }
+
+        figure {
+            margin: 1em 0;
+            text-align: center;
+        }
+        figure img {
+            max-width: 100%;
+            height: auto;
+        }
+
+        /* =========================================================================
+           脚注区域 (Footnotes Area)
+           ========================================================================= */
+        .footnote-area {
+            font-family: 'LatinTNR', "KaiTi", "STKaiti", serif;
+            font-size: 10.5pt;
+            line-height: 14.5pt;
+            border-top: 0.5pt solid #000;
+            padding-top: 2mm;
+            margin-top: 5mm;
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+        }
+        
+        .footnote-item {
+            text-indent: 0; /* 根据要求调整 */
+            padding-left: 1em; /* 悬挂缩进 */
+            text-indent: -1em;
+        }
+        .footnote-mark {
+            vertical-align: super;
+            font-size: 0.8em;
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- =========================================================================
+         第1页：封面页 (Cover Page)
+         ========================================================================= -->
+    <div class="page">
+        <div class="page-content">
+            
+            <h1 class="paper-title">论历史研究的格式规范与排版艺术</h1>
+            <h2 class="author-info">张三（历史大学 历史系，北京 100000）</h2>
+
+            <div class="abstract-section">
+                <div class="abstract-block">
+                    <span class="abstract-label">【摘 要】</span>
+                    <span class="abstract-content">本文探讨了历史研究论文的排版规范，详细论述了双栏布局、字体选择、页眉页脚设置以及图表和脚注的排版要求。通过严格的CSS控制，实现了高质量的打印输出和在线阅读体验。</span>
+                </div>
+                <div class="keywords-block">
+                    <span class="keywords-label">【关键词】</span>
+                    <span class="keywords-content">历史研究；格式排版；双栏布局；CSS；学术规范</span>
+                </div>
+            </div>
+
+            <div class="two-column" style="margin-top: 10mm;">
+                <h3 class="section-title">一、引言</h3>
+                <p class="first-paragraph">历史研究论文的排版质量直接影响着学术成果的传播效果和读者的阅读体验。一份格式规范、排版精良的论文，不仅能体现作者严谨的治学态度，还能提升论文的整体学术品位。在长期的学术实践中，历史学界形成了一套独具特色的排版规范，这些规范涵盖了从整体布局到字体细节的方方面面。</p>
+                <p>随着数字化排版技术的发展，如何利用现代工具精准再现传统的学术排版美学，成为了一个值得研究的课题。传统的Word排版虽然普及，但在处理复杂格式和实现自动化排版方面存在局限。基于HTML和CSS的排版技术，为解决这些问题提供了新的思路。</p>
+                
+                <blockquote>
+                    这是一个独立引文的示例。历史研究中常有大量史料引用，独立引文需要特殊的格式处理，通常使用楷体，左右缩进，以区别于正文。
+                </blockquote>
+
+                <p>本文旨在详细解析历史研究论文的排版规范，并探讨如何通过前端技术实现高质量的双栏分页排版。我们将从页面布局、字体选择、多栏处理等多个角度展开论述。</p>
+            </div>
+
+            <!-- 示例脚注 -->
+            <div class="footnote-area">
+                <div class="footnote-item"><span class="footnote-mark">①</span> 这是第一页的脚注示例，通常使用楷体和小字号。</div>
+                <div class="footnote-item"><span class="footnote-mark">②</span> 脚注区域位于页面底部，上方有分隔线。</div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- =========================================================================
+         第2页：正文页 (Text Page)
+         ========================================================================= -->
+    <div class="page">
+        <div class="page-header">张三：论历史研究的格式规范与排版艺术</div>
+        <div class="page-content two-column">
+            
+            <h3 class="section-title">二、页面布局与双栏设定</h3>
+            <p class="first-paragraph">页面布局是排版的基础。历史研究论文通常采用A4纸张，页边距设置有严格要求，一般为上3.3cm、下2.7cm、左2.4cm、右2.3cm。这种非对称的边距设置考虑了装订的需要，同时也使版面更加稳重。</p>
+            <p>双栏排版是学术期刊的常见形式，它能在有限的版面内容纳更多的文字，同时缩短了阅读时的视线移动距离，有助于提高阅读效率。在双栏排版中，栏间距（column-gap）的设置至关重要，过大则显得松散，过小则容易串行。通常，我们将栏间距设定为6mm左右。</p>
+            
+            <h4 class="subsection-title">1. 双栏的技术实现</h4>
+            <p class="first-paragraph">在HTML/CSS体系中，实现双栏布局主要依靠 <code>column-count: 2</code> 属性。为了保证每页内容的精确控制，我们不能让整个文档处于一个连续的容器中自动分页。相反，必须为每一页创建一个独立的 <code>.page</code> 容器，并在其中应用双栏样式。</p>
+            <p>这种方法虽然增加了HTML结构的复杂性，但确保了分页的精确性，避免了内容溢出或页面留白的问题。我们需要精确计算每页能容纳的字数，手动（或通过脚本）进行内容的切分。</p>
+
+            <h3 class="section-title">三、字体与段落规范</h3>
+            <p class="first-paragraph">中文字体的选择和搭配是中文排版的精髓。历史研究论文的正文通常使用宋体，字号为五号（10.5pt）或小四（12pt），行高设定为字号的1.5倍左右（如17.9pt）。英文和数字则要求使用Times New Roman字体。为了实现中西文字体的完美混合，我们在CSS中使用了 <code>@font-face</code> 和 <code>unicode-range</code> 技术，将英文字符精确匹配到Times New Roman，而中文字符回落到宋体。</p>
+            <p>段落排版的首要规则是首行缩进两字符。需要特别注意的是，在各级标题之后的首段，传统习惯上通常要求顶格排版，不进行首行缩进。这可以通过为首段添加 <code>.first-paragraph</code> 类来实现。</p>
+
+            <div class="table-wrapper full-width">
+                <div class="table-caption">表1 常见排版元素样式对比</div>
+                <table class="three-line">
+                    <thead>
+                        <tr>
+                            <th>元素名称</th>
+                            <th>字体</th>
+                            <th>字号</th>
+                            <th>行高/间距</th>
+                            <th>其他说明</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>大标题</td>
+                            <td>宋体/黑体</td>
+                            <td>26pt</td>
+                            <td>-</td>
+                            <td>居中，跨栏</td>
+                        </tr>
+                        <tr>
+                            <td>一级标题</td>
+                            <td>宋体</td>
+                            <td>16pt</td>
+                            <td>-</td>
+                            <td>居中</td>
+                        </tr>
+                        <tr>
+                            <td>正文</td>
+                            <td>宋体</td>
+                            <td>12pt</td>
+                            <td>17.9pt</td>
+                            <td>首行缩进2字符</td>
+                        </tr>
+                        <tr>
+                            <td>独立引文</td>
+                            <td>楷体</td>
+                            <td>12pt</td>
+                            <td>17.9pt</td>
+                            <td>左右缩进，首行不缩进</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <p>表格排版中，最常见的是"三线表"格式。三线表摒弃了繁杂的网格线，仅保留顶线、底线和表头下线，显得简洁明快、专业严谨。</p>
+
+        </div>
+        <div class="page-footer">2</div>
+    </div>
+
+</body>
+</html>
