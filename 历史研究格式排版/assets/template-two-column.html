@@ -4,19 +4,77 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ title }}</title>
+    
+    <!--
+      ═══════════════════════════════════════════════════════════════════════════
+      脚注每页重置策略说明 (Footnote Per-Page Reset Strategy)
+      ═══════════════════════════════════════════════════════════════════════════
+      
+      当前实现：CSS counter-reset 方案
+      
+      优点：
+      - 无需外部依赖，所有浏览器均支持 CSS counter
+      - 轻量级，不增加运行时开销
+      - 兼容性极好，支持 IE9+ 及所有现代浏览器
+      
+      限制：
+      - CSS counter 可控制"显示计数器值"（如①②③），但浏览器原生打印时
+        脚注无法真正"浮动到页底"并按页自动分割
+      - 这需要 Paged Media 引擎支持（CSS Paged Media Level 3 规范）
+      
+      如需真正的"每页脚注浮动"（适用于严格学术出版）：
+      
+      可选方案A：Paged.js（开源 polyfill）
+        1. 在 </head> 前添加：
+           <script src="https://unpkg.com/pagedjs/dist/paged.polyfill.js"></script>
+        
+        2. 将正文中的脚注引用改写为：
+           <p>正文内容<span class="footnote">脚注内容</span></p>
+        
+        3. 在 CSS 中添加：
+           .footnote {
+             float: footnote;
+             footnote-display: block;
+           }
+           @page {
+             @footnote {
+               border-top: 0.5pt solid #000;
+               padding-top: 4pt;
+               margin-top: 6pt;
+             }
+           }
+        
+        详见：https://pagedjs.org/documentation/
+      
+      可选方案B：Prince XML（商业引擎，高质量 PDF 输出）
+        - 支持完整的 CSS Paged Media 规范
+        - 适用于出版级排版需求
+        - 详见：https://www.princexml.com/
+      
+      降级行为（当前模板）：
+      - 脚注集中在每个 .page div 底部（需手动放置 HTML）
+      - 序号通过 CSS counter 显示（每页自动从①开始）
+      - 视觉上符合每页编号要求
+      - 跨页自动分割需手动调整 HTML 内容分配
+      
+      footnote reset fallback: 降级模式已激活（见 references/footnote-strategy.md）
+      
+      ═══════════════════════════════════════════════════════════════════════════
+    -->
+    
     <style>
         /* =========================================================================
            全局样式变量 (Global Style Variables)
            ========================================================================= */
         :root {
-            --paper-width: 210mm;
-            --paper-height: 297mm;
+            --paper-width: 210mm;   /* A4 宽度 */
+            --paper-height: 297mm;  /* A4 高度 */
             --page-margin-top: 3.3cm;
             --page-margin-bottom: 2.7cm;
             --page-margin-left: 2.4cm;
             --page-margin-right: 2.3cm;
             --column-gap: 6mm;
-            --base-font-size: 12pt;
+            --base-font-size: 12pt; /* 小四号，版芯: 36字 × 16cm */
             --base-line-height: 17.9pt;
         }
 
@@ -37,6 +95,7 @@
         body {
             background-color: #f0f0f0; /* 仅供预览时区分页面背景，打印时不可见 */
             font-family: 'LatinTNR', "SimSun", "STSong", "Noto Serif CJK SC", serif;
+            font-size: 12pt; /* 小四号正文，与 --base-font-size 一致 */
             font-size: var(--base-font-size);
             line-height: var(--base-line-height);
             color: #000;
@@ -62,6 +121,8 @@
             /* 内部使用 flex 布局方便管理页眉页脚和正文内容区 */
             display: flex;
             flex-direction: column;
+            /* 每页重置脚注计数器 */
+            counter-reset: footnote;
         }
 
         @media print {
@@ -253,27 +314,45 @@
         /* =========================================================================
            脚注区域 (Footnotes Area)
            ========================================================================= */
+        
+        /* 脚注引用上标 - 使用CSS counter自动编号 */
+        sup.fn-ref {
+            counter-increment: footnote;
+            font-size: 0.7em;
+            vertical-align: super;
+            font-weight: normal;
+        }
+        sup.fn-ref::before {
+            content: counter(footnote);
+        }
+        
+        /* 脚注区域容器 */
         .footnote-area {
             font-family: 'LatinTNR', "KaiTi", "STKaiti", serif;
             font-size: 10.5pt;
             line-height: 14.5pt;
             border-top: 0.5pt solid #000;
-            padding-top: 2mm;
-            margin-top: 5mm;
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 100%;
+            padding-top: 4pt;
+            margin-top: 6pt;
         }
         
+        /* 脚注条目（使用flex布局实现序号前后1em空位） */
         .footnote-item {
-            text-indent: 0; /* 根据要求调整 */
-            padding-left: 1em; /* 悬挂缩进 */
-            text-indent: -1em;
+            display: flex;
+            gap: 0;
+            text-indent: 0;
+            margin-bottom: 2pt;
         }
-        .footnote-mark {
-            vertical-align: super;
-            font-size: 0.8em;
+        
+        .footnote-num {
+            min-width: 1em;      /* 序号前空位：1字符 */
+            padding-right: 1em;  /* 序号后空位：1字符 */
+            text-align: left;
+        }
+        
+        .footnote-text {
+            flex: 1;
+            text-align: justify;
         }
 
     </style>
@@ -312,10 +391,16 @@
                 <p>本文旨在详细解析历史研究论文的排版规范，并探讨如何通过前端技术实现高质量的双栏分页排版。我们将从页面布局、字体选择、多栏处理等多个角度展开论述。</p>
             </div>
 
-            <!-- 示例脚注 -->
+            <!-- 示例脚注（每页单独编号） -->
             <div class="footnote-area">
-                <div class="footnote-item"><span class="footnote-mark">①</span> 这是第一页的脚注示例，通常使用楷体和小字号。</div>
-                <div class="footnote-item"><span class="footnote-mark">②</span> 脚注区域位于页面底部，上方有分隔线。</div>
+                <div class="footnote-item">
+                    <span class="footnote-num">①</span>
+                    <span class="footnote-text">这是第一页的脚注示例，使用楷体10.5pt字号，行高14.5pt，序号前后各留1字符空位。</span>
+                </div>
+                <div class="footnote-item">
+                    <span class="footnote-num">②</span>
+                    <span class="footnote-text">脚注区域位于页面底部，上方有0.5pt粗细的分隔线，顶部留4pt间距。</span>
+                </div>
             </div>
 
         </div>
