@@ -52,27 +52,51 @@ description: 历史学学术论文写作技能。用户提供论文大纲和 Not
 
 ### 阶段1：初始化与 NotebookLM 接入
 
-1. 确认已获得 NotebookLM URL 和论文大纲
-2. 使用 `mcp__notebooklm__ask_question` 向 NotebookLM 发出概览查询，获取所有文献清单：
+**步骤 1：认证检查**
 
-   ```
-   问题："请列出本笔记本中所有已上传的文献，包括每篇文献的标题、作者、年份和类型（专著/期刊/档案等）。"
-   ```
+调用 `mcp__notebooklm__get_health` 确认认证状态：
+- `authenticated: true` → 继续
+- `authenticated: false` → 提示用户运行 `mcp__notebooklm__setup_auth`（会弹出浏览器手动登录）
+- 触达免费账户 50 次/日配额时，调用 `mcp__notebooklm__re_auth` 切换账号
 
-   记录返回的文献列表，作为后续写作的**可用来源范围**。
+**步骤 2：笔记本注册**
 
-3. 读取论文大纲内容
-4. 对大纲中每个一级标题，向 NotebookLM 发出覆盖度探测查询：
+调用 `mcp__notebooklm__list_notebooks` 检查用户提供的 NotebookLM URL 是否已在库中：
+- 已存在 → 记录其 `notebook_id`，后续查询优先使用 `notebook_id`（比 URL 稳定）
+- 不存在 → 先用 `notebook_url` 发起首次查询，获取内容后再用 `mcp__notebooklm__add_notebook` 将其加入库
 
-   ```
-   问题："本笔记本中有哪些文献支持关于[章节主题]的论述？请列出相关文献及其关键论点。"
-   ```
+> 整篇论文写作期间使用固定 `session_id`（如 `paper_论文题目`），以保持跨问题的上下文连贯性。
 
-5. 汇总文献覆盖度评估结果，告知用户：
-   - 文献充足的章节
-   - 文献不足或缺失的章节（提示用户补充上传相关文献到 NotebookLM）
+**步骤 3：文献概览查询**
 
-6. **等待用户确认**：若存在文献缺口，用户选择补充上传后重试，或继续（标注待补充处）
+调用 `mcp__notebooklm__ask_question`：
+
+```
+参数:
+  question: "请列出本笔记本中所有已上传的文献，包括每篇文献的完整标题、作者、年份和类型（专著/期刊/档案等）。"
+  notebook_id: {已注册的 notebook_id}   # 或 notebook_url（首次）
+  session_id: "paper_{论文题目}"
+```
+
+记录返回的文献列表，作为后续写作的**可用来源范围**。
+
+**⚠️ follow-up 强制要求**：每次 `ask_question` 响应末尾含有提示"Is that ALL you need to know?"。在回复用户之前，必须评估回答是否完整；若有缺口，**立即追问**，直到信息完全满足需求再继续。
+
+**步骤 4：章节覆盖度探测**
+
+对大纲中每个一级标题，分别调用 `mcp__notebooklm__ask_question`（**复用同一 session_id**）：
+
+```
+question: "本笔记本中有哪些文献支持关于[章节主题]的论述？请列出相关文献及其关键论点。"
+```
+
+**步骤 5：汇总与用户确认**
+
+告知用户：
+- 文献充足的章节
+- 文献不足或缺失的章节（提示用户补充上传相关文献到 NotebookLM）
+
+**等待用户确认**：若存在文献缺口，用户选择补充上传后重试步骤3，或继续（标注待补充处）
 
 ### 阶段2：详细写作计划
 
@@ -222,36 +246,76 @@ python3 {skill_dir}/scripts/pack_simple.py \
 
 ---
 
-## NotebookLM 查询指南
+## NotebookLM MCP 工具参考
 
-### 使用 MCP 工具
+> 来源：[PleasePrompto/notebooklm-mcp — docs/tools.md](https://github.com/PleasePrompto/notebooklm-mcp/blob/main/docs/tools.md)
 
-本技能通过 `mcp__notebooklm__ask_question` 工具与 NotebookLM 交互：
+### 核心工具（Core）
+
+| 工具 | 参数 | 用途 |
+|------|------|------|
+| `mcp__notebooklm__ask_question` | `question`（必填）, `session_id`（可选）, `notebook_id`（可选）, `notebook_url`（可选）, `show_browser`（可选） | 向 NotebookLM 提问，返回有文献来源的回答 + follow-up 提示 |
+| `mcp__notebooklm__get_health` | 无 | 检查认证状态、活跃会话数、配置信息 |
+| `mcp__notebooklm__setup_auth` | 无 | 打开浏览器进行首次 Google 登录（浏览器必须可见） |
+| `mcp__notebooklm__re_auth` | 无 | 切换 Google 账号或重新认证；触达免费账户 50 次/日配额时使用；会关闭所有会话并清除认证数据 |
+| `mcp__notebooklm__list_sessions` | 无 | 查看当前活跃的浏览器会话 |
+| `mcp__notebooklm__close_session` | `session_id` | 关闭指定会话 |
+| `mcp__notebooklm__reset_session` | `session_id` | 重置会话对话历史（保留 session_id） |
+
+### 笔记本库管理
+
+| 工具 | 说明 |
+|------|------|
+| `mcp__notebooklm__add_notebook` | 安全的对话式添加，写入前需确认；必须提供 `url`、`name`、`description`、`topics` |
+| `mcp__notebooklm__list_notebooks` | 返回库中每个笔记本的 id、name、topics、URL、元数据 |
+| `mcp__notebooklm__get_notebook` | 通过 `id` 获取单个笔记本详情 |
+| `mcp__notebooklm__select_notebook` | 设置默认活跃笔记本（后续 ask_question 无需指定 notebook_id） |
+| `mcp__notebooklm__update_notebook` | 修改元数据字段 |
+| `mcp__notebooklm__remove_notebook` | 从库中移除条目（不删除 NotebookLM 中的原始笔记本） |
+| `mcp__notebooklm__search_notebooks` | 按 name/description/topics/tags 搜索库 |
+| `mcp__notebooklm__get_library_stats` | 返回总数、使用统计等汇总信息 |
+
+### Resources（只读）
+
+| URI | 内容 |
+|-----|------|
+| `notebooklm://library` | 完整库的 JSON：活跃笔记本、统计、所有条目 |
+| `notebooklm://library/{id}` | 特定笔记本的元数据（`{id}` 支持自动补全） |
+
+### ask_question 使用规范
 
 ```
-tool: mcp__notebooklm__ask_question
-参数:
-  question: "查询问题"
-  notebook_url: "用户提供的 NotebookLM URL"
-  session_id: "paper_{论文题目}"   # 同一篇论文写作保持同一 session
+参数组合（三选一）:
+  ① notebook_id   → 库中已注册的笔记本（推荐，稳定）
+  ② notebook_url  → 临时查询未注册的笔记本
+  ③ 两者均不填    → 使用 select_notebook 设置的默认笔记本
+
+session_id 规则:
+  - 同一篇论文的所有查询使用固定 session_id（如 paper_论文题目）
+  - session_id 保持跨问题上下文连贯，免费账户最多 10 个并发 session
+  - 15 分钟无活动后自动关闭
 ```
 
-### 核心查询模板
+### Follow-up 强制规则（来自官方文档）
+
+> **"Every `ask_question` response ends with a reminder that nudges your agent to keep asking until the user's task is fully addressed."**
+
+**执行要求**：
+1. 收到 ask_question 回答后，**先停下来分析**，对照原始需求判断信息是否完整
+2. 若回答缺少具体来源、引文或页码 → **立即追问**，不得直接写作
+3. 若回答含"文献中未找到" → 记录为文献缺口，**不得编造**
+4. 完全满足需求后，再综合所有回答开始写作
+
+### 史料查询模板
 
 | 场景 | 查询模板 |
 |------|---------|
-| 文献概览 | "请列出本笔记本中所有已上传的文献，包括标题、作者、年份和类型。" |
+| 文献概览 | "请列出本笔记本中所有已上传的文献，包括完整标题、作者、年份和类型。" |
 | 章节覆盖 | "本笔记本中有哪些文献支持关于[主题]的论述？列出文献及关键论点。" |
 | 史料查询 | "关于[具体事件/人物/现象]，请提供原始史料引文，包含来源文献名和相关文字。" |
 | 直接引文 | "请从[文献名]中找出关于[主题]的原文段落，原文引用，标注大致位置。" |
 | 论点核实 | "笔记本中是否有证据支持这一论断：[论断内容]？请提供具体文献依据。" |
-
-### 查询铁律
-
-1. **每个事实性陈述写作前必须先查询** — 不允许凭记忆或推断写作
-2. **「文献未提及」就是答案** — 及时标注文献缺口，不得编造
-3. **follow-up 直到信息完整** — 若首次回答不含具体来源，必须追问来源
-4. **区分 NotebookLM 的推断与引用** — 仅使用有文献标注的内容作为脚注来源
+| 追问来源 | "你刚才提到的[论断]出自哪篇文献？请给出作者和书名。" |
 
 ---
 
